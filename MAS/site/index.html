@@ -1,0 +1,89 @@
+<html>  
+ <head>  
+  <title> MobiCrowdConfig </title> 
+    <script type="text/javascript" src="parameters.js">
+    </script> 
+    <script>  
+        var OfficeX;
+        var OfficeY;
+        var HomeX;
+        var HomeY;
+        var AgentNum;
+        var Clockin;
+        var Clockout;
+
+      	function GOTO() {  
+          AgentNum = document.getElementById("agentNum").value;
+        	OfficeX = document.getElementById("officeX").value;
+          OfficeY = document.getElementById("officeY").value; 
+          HomeX = document.getElementById("homeX").value;
+          HomeY = document.getElementById("homeY").value;
+          Clockin = document.getElementById("clockin").value;
+          Clockout = document.getElementById("clockout").value;
+
+          var url = "exhibition.html"; 
+          window.open(encodeURI(url + "?agentNum=" + AgentNum + "?officeX=" + OfficeX + "?officeY=" + OfficeY
+             + "?homeX=" + HomeX + "?homeY=" + HomeY + "?clockin=" + Clockin + "?clockout=" +Clockout));
+          //window.open("exhibition.html?agentNum=" + AgentNum.value);
+        	   
+      	}  
+        function New() {
+          document.getElementById("officeX").value = 0;
+          document.getElementById("officeY").value = 0; 
+          document.getElementById("homeX").value = 0;
+          document.getElementById("homeY").value = 0;
+          document.getElementById("clockin").value = 0;
+          document.getElementById("clockout").value = 0;
+        }
+        function Load() {
+
+        }
+        function Save() {
+          
+        }
+    </script> 
+    <style type="text/css">
+		*
+		{
+			TEXT-ALIGN: center;
+ 			margin-left: auto;
+			margin-right: auto;
+		}
+ 	</style> 
+ </head>  
+ <body>  
+ 	<div id="file-box">
+  		<form action="" method="post" enctype="multipart/form-data">
+ 			<input type='text' name='textfield' id='textfield' class='txt' />  
+ 			<input type='button' class='btn' value='浏览...' />
+    		<input type="file" name="fileField" class="file" id="fileField" size="28" onchange="document.getElementById('textfield').value=this.value" />
+ 			<input type="submit" name="submit" class="btn" value="上传" />
+  		</form>
+	</div>
+ 	<div id = "file">
+ 		<button type = "button" id = "new" onclick = "New()">新建</button>
+ 		<button type = "button" id = "load" onclick = "Load()">加载</button>
+ 		<button type = "button" id = "save" onclick = "Save()">保存</button>
+ 	</div>
+ 	<div id = "edit">
+ 		<p>办公室</p>
+ 		<input type = "text" value = "200" id = "officeX">
+		<input type = "text" value = "200" id = "officeY">
+		<p>家</p>
+ 		<input type = "text" value = "1000" id = "homeX">
+ 		<input type = "text" value = "600" id = "homeY">
+ 		<p>agent数量</p>
+ 		<input type = "text" value = "25" id = "agentNum">
+ 		<p>上下班时间</p>
+		<input type = "text" value = "9:00" id = "clockin">
+ 		<input type = "text" value = "9:30" id = "clockout">
+ 	</div>
+ 	<div id = "exhibit">
+ 		
+ 		   <button type = "button" id = "exhibit" onclick = "GOTO()">试试效果</button>
+ 		
+ 	</div>
+ 	
+ 	 
+ </body>  
+</html>  

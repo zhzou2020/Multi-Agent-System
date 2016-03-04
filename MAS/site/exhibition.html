@@ -1,0 +1,496 @@
+<!doctype html>
+<html>
+	<head>
+		<title>MobiCrowd</title>
+		<script type="text/javascript">
+		var widthScale;
+		var heightScale;
+
+		var windowWidth;
+		var windowHeight;
+
+		var mp;
+		var bs;
+
+		var daytime;
+		var nighttime;
+		var currenttime;
+		var moment;
+
+		var socket;
+		var zr;
+		var agentZr;
+
+		var agentNum = 55;
+		var scene = new Object();
+		var clock = new Object();
+		var buildings = [];
+
+
+		function initParameters() {
+			
+			var urlinfo = window.location.href;                                                                //获取url
+    		agentNum = decodeURI(urlinfo.split("?")[1].split("=")[1]);                                        //拆分url得到“=”号后面的值（先用split("?")[1]得到？号以后的值，再用split("=")[1]得到等号后面的值，split从0开始计数）
+    		scene.officeX = decodeURI(urlinfo.split("?")[2].split("=")[1]); 
+    		scene.officeY = decodeURI(urlinfo.split("?")[3].split("=")[1]); 
+    		scene.homeX = decodeURI(urlinfo.split("?")[4].split("=")[1]); 
+    		scene.homeY = decodeURI(urlinfo.split("?")[5].split("=")[1]); 
+    		clock.clockin = decodeURI(urlinfo.split("?")[6].split("=")[1]); 
+    		clock.clockout = decodeURI(urlinfo.split("?")[7].split("=")[1]); 
+    		var office = new Object();
+    		office.x = scene.officeX;
+    		office.y = scene.officeY;
+    		buildings.push(office);
+    		var home = new Object();
+    		home.x = scene.homeX;
+    		home.y = scene.homeY;
+    		buildings.push(home);
+    		//alert(clock.clockin);
+    		//document.getElementById("show").innerHTML = decodeURI(userName);//decodeURI解码
+		}
+
+		function BuildButton() {
+			var Rectangle = require('zrender/shape/Rectangle');
+
+			var timeX = windowWidth/16;
+			var timeY = windowHeight/8;
+
+			var pauseButton = new Rectangle({
+				id: require('zrender/tool/guid')(),
+				style: {
+					x: timeX/2,
+					y: 7*timeY,
+					width: timeX,
+        			height: timeY/2,
+        			radius: 5,
+        			color : 'rgba(220, 20, 60, 0.8)',
+        			text: '暂停',
+        			textPosition: 'inside'
+				},
+				zlevel: 5,
+				clickable: true,
+				onclick: function()
+			    {
+			    	//alert("已经点了");
+			    	//sun.stop();
+			    	socket.emit('pause');
+			    	//alert("NoReaction");
+			    	//zr.render();
+               	}
+			});
+			zr.addShape(pauseButton);
+			var startButton = new Rectangle({
+				id: require('zrender/tool/guid')(),
+				style: {
+					x: 1.5*timeX + 10,
+					y: 7*timeY,
+					width: timeX,
+        			height: timeY/2,
+        			radius: 5,
+        			color : 'rgba(220, 20, 60, 0.8)',
+        			text: '开始',
+        			textPosition: 'inside'
+				},
+				zlevel: 5,
+				clickable: true,
+				onclick: function()
+			    {
+			    	//sun.start();
+			    	socket.emit('start');
+               	}
+			});
+			zr.addShape(startButton);
+			zr.render();
+		}
+		function BuildTime(){
+
+			var seconds = parseInt(currenttime % 60);
+			var minutes = parseInt((currenttime/60) % 60);
+			var hours = parseInt(currenttime/3600);
+			var ct = String(hours) + ':' + String(minutes) + ':' + String(seconds);
+			var Rectangle = require('zrender/shape/Rectangle');
+
+			var timeX = windowWidth/16;
+			var timeY = windowHeight/8;
+
+			var TimeRectangle = new Rectangle({
+				id: require('zrender/tool/guid')(),
+				style: {
+					x: 13 * timeX,
+					y: timeY/2,
+					width: 2*timeX,
+        			height: timeY/2,
+        			radius: 5,
+        			color : 'rgba(220, 20, 60, 0.8)',
+        			text: ct,
+        			textPosition: 'inside'
+				},
+				zlevel: 5,
+			});
+			zr.addShape(TimeRectangle);
+			/*var CircleShape = require('zrender/shape/Circle');
+			var Rectangle = require('zrender/shape/Rectangle');
+
+			var sun;
+
+			var timeX = windowWidth/16;
+			var timeY = windowHeight/8;
+
+			var timecircle = new CircleShape({
+
+    			id: require('zrender/tool/guid')(),
+    			position: [14.5 * timeX, timeY/2],
+    			rotation: [0, 0, 0],
+    			scale: [1, 1],
+    			style: {
+        			x: 0,
+        			y: 0,
+        			r: timeY/2,
+        			brushType: 'both',
+        			color: 'rgba(220, 20, 60, 0.8)',
+        			strokeColor: "rgba(220, 20, 60, 0.8)",
+        			lineWidth: 5,
+        			text: '我是太阳',
+        			textPosition: 'inside'
+    			},
+   		 		//draggable: true,
+   		 		zlevel: 5
+			});*/
+			//zr.addShape(timecircle);
+
+			//var Animation = require("zrender/animation/Animation");
+			//var hudu = (2*Math.PI / 360) * 6;
+			//sun = zr.animate(timecircle.id, "", true);
+			/*sun.when(750, {
+        		position: [14.5 * timeX + Math.sin(hudu * moment)*timeX, timeX + timeY/2 - Math.cos(hudu * moment)*timeX]
+    		})
+    		.when(1500, {
+        		position: [14.5 * timeX + Math.sin(hudu * moment)*timeX, timeX + timeY/2 - Math.cos(hudu * moment)*timeX]
+    		})
+    		.when(2250, {
+        		position: [14.5 * timeX + Math.sin(hudu * moment)*timeX, timeX + timeY/2 - Math.cos(hudu * moment)*timeX]
+    		})
+    		.when(3000, {
+        		position: [14.5 * timeX + Math.sin(hudu * moment)*timeX, timeX + timeY/2 - Math.cos(hudu * moment)*timeX],
+        		//strokeColor: 'rgba(250, 14.50, 0, 0.8)'
+    		})
+    		.when(3750, {
+        		position: [14.5 * timeX + Math.sin(hudu * moment)*timeX, timeX + timeY/2 - Math.cos(hudu * moment)*timeX]
+    		})
+    		.when(4500, {
+        		position: [14.5 * timeX + Math.sin(hudu * moment)*timeX, timeX + timeY/2 - Math.cos(hudu * moment)*timeX]
+    		})
+    		.when(5250, {
+        		position: [14.5 * timeX + Math.sin(hudu * moment)*timeX, timeX + timeY/2 - Math.cos(hudu * moment)*timeX]
+    		})
+    		.when(6000, {
+        		position: [14.5 * timeX + Math.sin(hudu * moment)*timeX, timeX + timeY/2 - Math.cos(hudu * moment)*timeX]
+    		});*/
+    		//sun.start();
+
+
+			/*zr.animate(timecircle.id, "", true)
+    		.when(15000, {
+        		position: [15 * timeX, timeY]
+    		})
+    		.when(30000, {
+        		position: [14.5 * timeX, timeY*1.5],
+        		//strokeColor: 'rgba(250, 14.50, 0, 0.8)'
+    		}, "BounceIn")
+    		.when(45000, {
+        		position: [13 * timeX, timeY]
+    		})
+    		.when(60000, {
+        		position: [14.5 * timeX, timeY/2]
+    		}).start();
+
+			var pauseButton = new Rectangle({
+				id: require('zrender/tool/guid')(),
+				style: {
+					x: timeX/2,
+					y: 7*timeY,
+					width: timeX,
+        			height: timeY/2,
+        			radius: 5,
+        			color : 'rgba(220, 20, 60, 0.8)',
+        			text: '暂停',
+        			textPosition: 'inside'
+				},
+				zlevel: 5,
+				clickable: true,
+				onclick: function()
+			    {
+			    	//alert("已经点了");
+			    	//sun.stop();
+			    	socket.emit('pause');
+			    	//alert("NoReaction");
+			    	//zr.render();
+               	}
+			});
+			zr.addShape(pauseButton);
+			var startButton = new Rectangle({
+				id: require('zrender/tool/guid')(),
+				style: {
+					x: 1.5*timeX + 10,
+					y: 7*timeY,
+					width: timeX,
+        			height: timeY/2,
+        			radius: 5,
+        			color : 'rgba(220, 20, 60, 0.8)',
+        			text: '走起',
+        			textPosition: 'inside'
+				},
+				zlevel: 5,
+				clickable: true,
+				onclick: function()
+			    {
+			    	//sun.start();
+			    	socket.emit('start');
+               	}
+			});
+			zr.addShape(startButton);
+
+			zr.render();
+
+			*/
+
+		}
+		function BuildMap(w, h){
+			BuildTime();
+			var Rectangle = require('zrender/shape/Rectangle');
+	    	zr.addShape(
+	    		new Rectangle({
+
+	    			//zlevel = 0;
+
+	    			style: {
+        				x: 0,
+        				y: 0,
+        				width: w,
+        				height: h,
+        				radius: 20,
+        				color : 'rgba(0, 30, 60, 0.4)'
+        				},
+    				clickable : false
+	    		})
+	    	);
+
+		}
+		
+		function BuildBuilding()
+		{
+			for (var i = buildings.length - 1; i >= 0; i--) {
+				var building = buildings[i];
+
+				var bdX = building.x * widthScale;
+				var bdY = building.y * heightScale;
+				//var bdR = building.r;
+
+				var Ring = require('zrender/shape/Ring');
+				var ringshape = new Ring({
+
+    				style: {
+        			x : bdX,
+        			y : bdY,
+        			r0 : 60,
+        			r : 70,
+
+        			color : 'rgba(150, 20, 150, 0.8)'
+    				},
+
+    				zlevel : 1,
+    				clickable : true
+				});
+				zr.addShape(ringshape);
+
+/*				var ImageShape = require('zrender/shape/Image');
+				var image = new ImageShape({
+    			style: {
+        			image: 'house.jpg',
+        			x: bdX,
+        			y: bdY
+    				},
+    			zlevel: 1,
+    			opacity: 0.2
+				});
+				zr.addShape(image);
+				*/
+			};
+		}
+
+		function BuildAgents(agents)
+		{
+			for (var i = 0; i <= agents.length - 1; i++) {
+				var agent = agents[i];
+
+				var agentX = agent.x * widthScale;
+				var agentY = agent.y * heightScale;
+
+				var CircleShape = require('zrender/shape/Circle');
+				zr.addShape(
+					new CircleShape({
+						
+						//zlevel = 0;
+
+						style : {
+							id : agent.id,
+            				x : agentX,
+            				y : agentY,
+            				r : agent.r,
+            			
+            			color : 'rgba(220, 100, 20, 0.8)',
+            			zlevel: 1
+						},
+						//circle是可点击的，点击之后服务器接收agent的id，然后此agent的半径变大一倍
+						//此处emit报错
+						clickable: true,
+						onclick: function()
+			    		{
+			    			//socketio = require('/socket.io/socket.io');
+			    			//var socket = socketio.content('/');
+			    			var agentID = id;
+
+			    			//if(id == null)
+			    			//	alert("null");
+			    			//alert(id);
+			    			socket.emit("clickID", agentID);                 
+
+			    		}
+						
+					})
+				)
+
+			}
+		};
+</script>
+	</head>
+	<body>
+		<div id="main"></div>
+		<div id="agentPanel"></div>
+		<!--
+		<input id="inputArea" type="text">
+		-->
+		<style type="text/css">
+		*
+		{
+			margin: 0;
+			padding: 0；
+		}
+		#main
+		{
+			background-color: white;
+			color: purple;
+			position: absolute;
+			font-size: 20pt;
+		}
+		
+
+		</style>
+		<script type="text/javascript" src="bower_components/requirejs/require.js"></script>
+
+		<script type="text/javascript">
+		
+		requirejs.config({
+		    baseUrl: 'bower_components',
+		    paths: {
+		      jquery: 'jquery/dist/jquery',
+		      socketio: "/socket.io/socket.io"
+		    },
+	        packages: [
+	            {
+	                name: 'zrender',
+	                location: 'zrender/src',
+	                main: 'zrender'
+	            }
+	        ]
+		});
+		require(['jquery', 'socketio', 'zrender', 'zrender/shape/Circle', 'zrender/shape/Ring'], function($, io, zrender, Circle, Ring)
+		{
+			var main = document.getElementById('main');
+			var agentPanel = document.getElementById('agentPanel');
+    		windowWidth = window.innerWidth;
+    		windowHeight = window.innerHeight;
+		    main.style.width = windowWidth + 'px';
+		    main.style.height = windowHeight + 'px';
+		    agentPanel.style.width = windowWidth + 'px';
+		    agentPanel.style.height = windowHeight + 'px';
+
+		    initParameters();
+
+		    //var userPanel = document.getElementById('userPanel');
+
+		    //agentZr = zrender.init(agentPanel);
+	    	zr = zrender.init(main);
+	    	
+
+      		socket = io.connect('/');
+
+			function pushAgents(agents)
+			{
+				zr.clear();
+				pushMap(mp);
+				BuildButton();
+				pushBuildings();
+				//BuildTime();
+				BuildAgents(agents);
+				zr.render();
+				//alert("pushAgents");
+				//$("#screen").append("<div>" + content + "</div>");
+			}
+			function pushMap(map)
+			{
+				mp = map;
+				w = map.width;
+				h = map.height;
+				widthScale = windowWidth/w;
+				heightScale = windowHeight/h;
+				BuildMap(windowWidth, windowHeight);
+				zr.render();
+			}
+
+			function pushBuildings()
+			{
+				BuildBuilding();
+				zr.render();
+			}
+
+
+
+        	// Now we can listen for that event
+        	socket.on('map', function(map)
+        	{
+        		pushMap(map, socket);
+         		/*socket.emit('scene', scene);
+        		socket.emit('time', clock);
+        		socket.emit('agentNum', agentNum);*/
+
+        		socket.emit('init', scene, agentNum, clock.clockin, clock.clockout);
+
+        		//alert("init");
+
+        	});
+      		socket.on('agents', function(agents, cur_time) 
+      		{
+      			//alert("agents");
+      			currenttime = cur_time;
+      			//BuildTime();
+      			pushAgents(agents);
+      		});
+      		socket.on('buildings', function(buildings)
+      		{
+      			bs = buildings;
+      			pushBuildings(buildings);
+      		});
+      		socket.on('freshTime', function(time) 
+      		{
+      			currenttime = time;
+      			moment = currenttime % 60;
+      		});
+			
+			zr.render();
+		});
+	</script>
+
+
+	</body>
+</html>
