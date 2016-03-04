@@ -1,0 +1,15 @@
+界面调用架构
+1.用户配置信息初始化 init(paras)  none return;
+参数描述：paras is an object. And it have these attribute:homeX,homeY,homeR,officeX,officeY,officeR,nums,t_gotoOffice,t_goHome
+          homeX,homeY,homeR,officeX,officeY,officeR,nums均为正整数；
+          t_gotoOffice,t_goHome 为以秒为单位的时间戳，正整数。
+2.运行  run()  none return;让平台运行，可用作启动或从暂停中恢复。
+3.恢复  suspend()   node return;让平台暂停，终止一切agent活动和计时器。
+
+架构调用界面
+1.服务器初始化启动，initSystem()；
+2.agent信息变化后调用render(agentList,cur_time)；
+参数描述：agentList是一个列表，里面包含的元素是模式为{id:a,x:b,y:c}的map,a为string,b、c
+    均为正整数。
+          cur_time表示当前时间，是一个以秒为单位的时间戳，为正整数。
+

@@ -1,0 +1,13 @@
+1.启动：服务器端启动并监听端口port：8080；浏览器端connect链接；服务器获取连入的浏览器并将其填入数组
+2.交互：bower to server
+	connection/该字段的方法体似乎是隐藏的？
+	init
+	start
+	pause
+	disconnection/同connection
+	server to bower
+	map
+	building
+	agents
+	freshtime
+3.浏览器断开：服务器监听到disconnect，将该client从数组清除
